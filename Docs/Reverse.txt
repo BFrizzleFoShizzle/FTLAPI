@@ -1,0 +1,102 @@
+jmp to OPENGL32.glFinish
+0065DBB8
+= FTLGame.exe+0025DBB8
+
+
+Unit/char reverse
+x float = +C
+y float = +10
+x goal (direct, float) = +1C
+y goal (direct, float) = +20
+HP = +2c
+max HP= +30
+x goal (pathfinder, 4byte int) = +50
+y goal (pathfinder, 4byte int) = +54
+Selection (1 byte bool) = +78 (0 = nothing, 1 = selected, 2 = hover)
+Name pointer = +1f8, +1fC, +378?
+Name pointer = 
+
+
+grid width: 35
+
+Ship base value: 0x00791108 (value of the base address of a ship)
+
+Your ship
+FTLGame.exe+39BA90
+Ship array
+FTLGame.exe+39BAA4  +3d8  +[18, 1c]
+(stack based derivation) (0028E400+10 = 0DB0A870 +0c -> DB63988+12c)
+Ship reverse
++24 = oxygen power manager
++A4 = shield power manager
++A8 = ship weapon manager
++A8 = weapon power manager
++AC = drone power manager
++B0 = engine power manager
++B4 = medical power manager
++C4 Pointer to unit pointer array
++C8 Pointer to value of last element in unit pointer array
++12C = hp
+(bunch of strings 1c, 1d4, 4b8-4d4)3
++160 = ship image?
++188 = cloak image?
++4BC = name
++4C0 = display name
+
+
+POWER MANAGER reverse
++31 = operated slave 1? (1 byte?)
++34 = operated (4 bytes)
++3C = power master value
++144 = power slave value
++1A0 = attached devices array pointer (weapons)
++12E = operated slave 2? (1 byte?)
+ = Shield power
+
+
+Weapon (descriptor?) array:
+FTLGame.exe+39BAAC +28 +8 +4c +n
+weapon (descriptor?) reverse
++4c = weapon pointer
+
+
+
+
+WEAPON reverse
++8 = time towards charge (seconds)
++C = finish charge time (seconds)
++B0 powering bool (1 byte)
++B1 powering bool (1 byte)
++B2 powering bool (1 byte)
++B8 = pointer to target array (1 target per shot, each target is two floats, x and y, should (usually) always be the same)
++D8 = name
++DC = num shots
++17C = charge (slave) (0 to 1)
++338 = charge (slave) (0 to 1)
+
+WEAPON TARGET reverse:
++0 shot 1 x (float)
++4 shot 1 y (float)
++8 shot 2 x (float)
++c shot 2 y (float)
++10 shot 3 x (float)
++14 shot 3 y (float)
+
+
+STATIC ADDRESS:
+FTLGame.exe+39BA90 = 0079F780
+[0079F780+0C] = 0DC80DD8
+[0DC80DD8+(unit*4)] = 0DDF05B0 = unit
+[0DDF05B0+2c] = HP
+
+0
+[0028E400+10] = 0DCB9C98?
+[0DCB9C98?+308] =  0DC0A408
+//[0DCB9F98+08] = 0DC0A408
+
+[0DC0A408+0] = 0D9DCB58
+[0D9DCB58+4c] = 0D858A90
+0D858A90+1c4 = shield
+
+0DC570C0
+
