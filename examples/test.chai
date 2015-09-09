@@ -1,0 +1,17 @@
+GLOBAL x = 250.0;
+def hook(){
+	var y = x-30;
+	try {
+		drawString(x,y,to_string(playerShip.getHealth()));
+	}catch(e){
+		drawString(x,y,e.what());
+	}
+	x += 1;
+	if(x>300) {
+		x=250.0;
+	}
+	if(inHangar()) {
+		drawString(200,200,"in hangar");
+	}
+};
+addDrawHook(hook);
