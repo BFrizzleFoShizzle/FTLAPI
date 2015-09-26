@@ -1,5 +1,7 @@
 #pragma once
 #include "FTLWeapon.h"
+#include <string>
+#include <memory>
 
 struct unit {
 	char unknown1[0xC];
@@ -24,7 +26,7 @@ struct unit {
 struct utilityManager {
 	char unknown1[0x34];
 	char operated; //0 if not operated, 1 if operated
-	char unknown2;
+	char unknown2[4];
 	int powerLevel;
 	char unknown3[0x160];
 	weapon** weapons; //(weapons[0]) = pointer to first weapon
@@ -48,6 +50,14 @@ struct ship {
 	unit** unitsEnd; //pointer to ONE PAST the last element of units array
 	char unknown4[0x60];
 	int health;
+	char unknown5[0x30];
+	char* shipImage;
+	char unknown6[0x24];
+	char* cloakImage;
+	char unknown7[0x32C];
+	char* id;
+	char* name;
+	char* displayName;
 	//skip the rest for now...
 };
 
@@ -58,14 +68,44 @@ ship* getPlayerShip(void);
 
 ship* getEnemyShip(void);
 
+class UtilityManagerWrapper {
+public:
+	UtilityManagerWrapper(utilityManager* representedUtil);
+	bool getOperated(void);
+	void setOperated(bool);
+	int getPowerLevel(void);
+	void setPowerLevel(int power);
+	void setUtilityManagerPointer(utilityManager* representedUtil);
+	utilityManager* getUtilityManagerPointer(void);
+private:
+	utilityManager *pUtil;
+};
+
 class ShipWrapper {
 public:
 	ShipWrapper(ship* representedShip);
 	ShipWrapper(void);
 	int getHealth(void);
 	void setHealth(int);
+	std::string getShipImageName(void);
+	std::string getCloakImageName(void);
+	std::string getID(void);
+	std::string getName(void);
+	std::string getDisplayName(void);
+	std::shared_ptr<UtilityManagerWrapper> getOxygenManager(void);
+	std::shared_ptr<UtilityManagerWrapper> getWeaponManager(void);
+	std::shared_ptr<UtilityManagerWrapper> getDroneManager(void);
+	std::shared_ptr<UtilityManagerWrapper> getEngineManager(void);
+	std::shared_ptr<UtilityManagerWrapper> getMedicalManager(void);
+	std::shared_ptr<UtilityManagerWrapper> getShieldManager(void);
 	void setShipPointer(ship* representedShip);
 	ship* getShipPointer(void);
 private:
 	ship *pShip;
+	std::shared_ptr<UtilityManagerWrapper> oxygenMan;
+	std::shared_ptr<UtilityManagerWrapper> weaponMan;
+	std::shared_ptr<UtilityManagerWrapper> droneMan;
+	std::shared_ptr<UtilityManagerWrapper> engineMan;
+	std::shared_ptr<UtilityManagerWrapper> medicalMan;
+	std::shared_ptr<UtilityManagerWrapper> shieldMan;
 };
