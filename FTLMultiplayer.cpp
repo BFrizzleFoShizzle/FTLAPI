@@ -3,6 +3,7 @@
 #include "FTLShipSelector.h"
 #include "FTLDraw.h"
 #include "FTLAPI.h"
+#include "DirtyHooker.h"
 #include <cstdlib>
 #include <windows.h>
 #include <cstdio>
@@ -21,42 +22,51 @@ chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
 HANDLE FTLProcess;
 
 
-void drawShit(void) {
-	char output[10];
-	if(playerShip != NULL) {
-		//error checking is for bitches
-		//int input = chai.eval<int>("playerShip.health");
-		int input = 0;
-		try {
-			if (playerWrapper) {
-				
-			}
-		}
-		catch (const std::exception& e) {
-			MessageBox(NULL, e.what(), "test", MB_OK + MB_ICONINFORMATION);
-			
-		}
+void updateShip(void) {
+	playerWrapper->setShipPointer(playerShip);
+}
+
+// returns a HookAddr containing the hook code defined in the function
+HookAddr getShipCreateHook(void) {
+	HookAddr output;
+	void* p1;
+	void* p2;
+	__asm {
+		//jump to hook addr calculation code
+		jmp hookEnd;
+	hookStart:
+		//hook asm
+		mov [playerShip], eax;
+	hookEnd:
+		mov [p1], offset hookStart;
+		mov [p2], offset hookEnd;
+
 	}
-};
+	output.startAddress = (DWORD)p1;
+	output.endAddress = (DWORD)p2;
+	return output;
+}
 
 DWORD WINAPI FTLM_Main (LPVOID lpParam)
 {
-	char output[50];
 	FTLProcess = GetCurrentProcess();
 	//this will also hook glfinish
 	FTLSSMain();
-	//add our draw hook
-	addDrawHook(drawShit);
+	//add ship creation hook
+	DWORD shipCreationAddr = 0x400000 + 0x6314C;
+	//function hook first, this means it gets called after the ASM block hook
+	RET6AutoHookFunction(updateShip, shipCreationAddr, 6, FTLProcess);
+	RET6AutoHookASMBlock(getShipCreateHook(), shipCreationAddr, 6, FTLProcess);
 	//set up chai
 	setupChai(&chai);
 	//execute test script
 	chai.eval_file("test.chai");
 	//set up pointers to game stuff
-	while(playerShip == NULL){
+	/*while(playerShip == NULL){
 		ReadProcessMemory(FTLProcess,(VOID*)(0x400000+0x39BA90),&playerShip,4,NULL);
 		Sleep(100);
 	}
-	playerWrapper->setShipPointer(playerShip);
+	playerWrapper->setShipPointer(playerShip);*/
 	return 0;
 };
 
