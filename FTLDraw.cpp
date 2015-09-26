@@ -7,8 +7,6 @@
 //vector of functions that take no arguments and return nothing
 std::vector<std::function<void(void)>> hooks;
 
-DWORD glFinishPointer;
-
 void drawTriangle (float x1,float y1,float x2,float y2,float x3,float y3) {
 	glEnable(GL_COLOR_MATERIAL);
 	glBegin(GL_TRIANGLES);
@@ -39,20 +37,9 @@ __declspec(noinline) void callHooks(void) {
 }
 
 void openGLFinishHook(void) {
-	// EBP, EBX and EDI are pushed by VC++ automatically before this ASM block
-	// code here is safe, just don't use any variables, cause they'll prolly screw up the registers
-	// if you need variables, create a function and call it here, that will preserve the registers
-
 	callHooks();
-
-	// reset registers and jump to opengl code
-	__asm
-	{
-		pop edi;
-		pop ebx;
-		pop ebp;
-		jmp glFinishPointer;
-	}
+	//call the original function
+	glFinish();
 };
 
 void addDrawHook(std::function<void(void)> function) {
@@ -61,6 +48,5 @@ void addDrawHook(std::function<void(void)> function) {
 
 void hookGLFinish(void) {
 	HANDLE FTLProcess = GetCurrentProcess();
-	glFinishPointer = (DWORD)GetProcAddress(GetModuleHandle("OPENGL32.dll"), "glFinish");
 	RETHook6Byte((0x0025DBB8+0x00400000),openGLFinishHook,FTLProcess);
 }
