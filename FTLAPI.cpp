@@ -5,6 +5,8 @@
 
 ShipWrapper *playerWrapper = new ShipWrapper();
 
+std::vector<std::function<void(void)>> mouseDownHooks;
+std::vector<std::function<void(void)>> mouseUpHooks;
 std::vector<std::function<void(int)>> keyUpHooks;
 std::vector<std::function<void(int)>> keyDownHooks;
 
@@ -17,7 +19,41 @@ bool inHangar(void) {
 	return false;
 }
 
+HHOOK hMouseHook;
 HHOOK hKeyboardHook;
+
+
+LRESULT CALLBACK mouseHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
+	char window_title[5];
+	HWND foreground = GetForegroundWindow();
+	GetWindowText(foreground, window_title, 5);
+	// ignore if not our window (should make this better...)
+	if (strcmp(window_title, "FTL")==0) {
+		if (wParam == WM_LBUTTONDOWN)
+		{
+			for (int i = 0; i < mouseDownHooks.size(); i++) {
+				try {
+					mouseDownHooks[i]();
+				}
+				catch (std::exception e) {
+					messageBox(e.what(), "Mouse hook fail!");
+				}
+			}
+		}
+		if (wParam == WM_LBUTTONUP)
+		{
+			for (int i = 0; i < mouseUpHooks.size(); i++) {
+				try {
+					mouseUpHooks[i]();
+				}
+				catch (std::exception e) {
+					messageBox(e.what(), "Mouse hook fail!");
+				}
+			}
+		}
+	}
+	return CallNextHookEx(hMouseHook, nCode, wParam, lParam);
+}
 
 LRESULT CALLBACK keyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	char window_title[5];
@@ -52,6 +88,14 @@ LRESULT CALLBACK keyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
 }
 
+void addMouseUpHook(std::function<void(void)> function) {
+	mouseUpHooks.push_back(function);
+}
+
+void addMouseDownHook(std::function<void(void)> function) {
+	mouseDownHooks.push_back(function);
+}
+
 void addKeyUpHook(std::function<void(int)> function) {
 	keyUpHooks.push_back(function);
 }
@@ -60,7 +104,40 @@ void addKeyDownHook(std::function<void(int)> function) {
 	keyDownHooks.push_back(function);
 }
 
+DWORD WINAPI hookMouse(LPVOID lpParam) {
+	ftlWindow = FindWindow(NULL, "FTL");
+	//HINSTANCE hInstance = GetModuleHandle(NULL);
+	//set mouse hook
+	DWORD threadID = GetWindowThreadProcessId(ftlWindow, NULL);
+	//DWORD threadID = GetCurrentThreadId();
+	hMouseHook = SetWindowsHookEx(WH_MOUSE_LL, mouseHookProc, hInstance, NULL);
+	hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, keyboardHookProc, hInstance, NULL);
+	//MessageBox(NULL, output, "test", MB_OK + MB_ICONINFORMATION);
+	MSG message;
+	while (GetMessage(&message, NULL, 0, 0)) {
+		TranslateMessage(&message);
+		DispatchMessage(&message);
+	}
+	return 0;
+}
+
+
+std::shared_ptr<POINT> getCursorPos(void) {
+	if (ftlWindow == NULL)
+		throw std::runtime_error("Mouse not hooked!");
+	LPPOINT p = new POINT();
+	if (GetCursorPos(p)) {
+		if (ScreenToClient(ftlWindow, p)) {
+			std::shared_ptr<POINT> pt = std::shared_ptr<POINT>(p);
+			return pt;
+		}
+		throw std::runtime_error("ScreenToClient fail!");
+	}
+	throw std::runtime_error("GetCursorPos fail!");
+}
+
 void setupChai(chaiscript::ChaiScript *chai) {
+	CreateThread(NULL, 0, &hookMouse, NULL, 0, NULL);
 	chai->add_global(chaiscript::var(playerWrapper), "playerShip");
 	chai->add(chaiscript::fun(drawString2), "drawString");
 	chai->add(chaiscript::fun(drawRect), "drawRect");
@@ -83,7 +160,12 @@ void setupChai(chaiscript::ChaiScript *chai) {
 	chai->add(chaiscript::fun(&UtilityManagerWrapper::setOperated), "setOperated");
 	chai->add(chaiscript::fun(&UtilityManagerWrapper::setPowerLevel), "setPowerLevel");
 	chai->add(chaiscript::fun(addDrawHook), "addDrawHook");
+	chai->add(chaiscript::fun(addMouseDownHook), "addMouseDownHook");
+	chai->add(chaiscript::fun(addMouseUpHook), "addMouseUpHook");
 	chai->add(chaiscript::fun(addKeyDownHook), "addKeyDownHook");
 	chai->add(chaiscript::fun(addKeyUpHook), "addKeyUpHook");
+	chai->add(chaiscript::fun(getCursorPos), "getCursorPos");
+	chai->add(chaiscript::fun(&POINT::x), "x");
+	chai->add(chaiscript::fun(&POINT::y), "y");
 	chai->add(chaiscript::fun(inHangar), "inHangar");
 }
