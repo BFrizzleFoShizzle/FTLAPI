@@ -21,6 +21,8 @@ chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
 
 HANDLE FTLProcess;
 
+HINSTANCE hInstance;
+
 
 void updateShip(void) {
 	playerWrapper->setShipPointer(playerShip);
@@ -60,7 +62,12 @@ DWORD WINAPI FTLM_Main (LPVOID lpParam)
 	//set up chai
 	setupChai(&chai);
 	//execute test script
-	chai.eval_file("test.chai");
+	try {
+		chai.eval_file("test.chai");
+	}
+	catch (std::exception e) {
+		MessageBox(NULL, e.what(), "Script error!", MB_OK + MB_ICONINFORMATION);
+	}
 	//set up pointers to game stuff
 	/*while(playerShip == NULL){
 		ReadProcessMemory(FTLProcess,(VOID*)(0x400000+0x39BA90),&playerShip,4,NULL);
@@ -72,6 +79,7 @@ DWORD WINAPI FTLM_Main (LPVOID lpParam)
 
 BOOL WINAPI DllMain (HINSTANCE hModule, DWORD dwAttached, LPVOID lpvReserved)
 {
+	hInstance = hModule;
     if (dwAttached == DLL_PROCESS_ATTACH) {
         CreateThread(NULL,0,&FTLM_Main,NULL,0,NULL);
     }

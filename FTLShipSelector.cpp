@@ -1,7 +1,6 @@
 ﻿#include "FTLShipSelector.h"
 #include "FTLAPI.h"
 #include <cstdlib>
-#include <Windows.h>
 #include <gl\GL.h>
 #include "TextHelper.h"
 #include "FTLDraw.h"
@@ -10,7 +9,6 @@
 
 //black magic for getting a handle on our own DLL
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
-
 
 DWORD mouseClickPointer = 0x00400000+0x22BF3C;
 
@@ -143,7 +141,13 @@ __declspec(noinline) void dealWithClick(void) {
 		pop eax
 	}
 	if(ftlWindow==NULL){
-		ftlWindow = GetActiveWindow();
+		/*ftlWindow = GetActiveWindow(); 
+		HINSTANCE hInstance = (HINSTANCE)GetWindowLong(ftlWindow, GWL_HINSTANCE);
+		DWORD threadID = GetWindowThreadProcessId(ftlWindow, NULL);
+		sprintf(output, "threadID %lu hInstance %lu", threadID, hInstance);
+		MessageBox(NULL, output, "test", MB_OK + MB_ICONINFORMATION);
+		//DWORD threadID = GetCurrentThreadId();
+		SetWindowsHookEx(WH_MOUSE, MouseHookProc, hInstance, NULL);*/
 		//sprintf(output,"FTLWindow %x",ftlWindow);
 		//MessageBox(NULL, output, "test", MB_OK + MB_ICONINFORMATION);
 		//GetWindowText(ftlWindow,output,50);
@@ -298,23 +302,4 @@ void FTLSSMain (void)
 			break;
 		}
 	}
-	/*
-    CreateThread(NULL,0,&mouseHookLoop,NULL,0,NULL);
-	HWND hwndConsole = FindWindow( NULL, "FTL" );
-	HINSTANCE hInstance = (HINSTANCE)GetWindowLong(hwndConsole, GWL_HINSTANCE);
-	//set mouse hook
-	DWORD threadID = GetWindowThreadProcessId(hwndConsole,NULL);
-	sprintf(output,"threadID %lu hInstance %lu",threadID, hInstance);
-	MessageBox(NULL, output, "test", MB_OK + MB_ICONINFORMATION);
-	//DWORD threadID = GetCurrentThreadId();
-	SetWindowsHookEx(WH_MOUSE_LL,MouseHookProc,hInstance,NULL);
-	while(true) {
-		MSG msg;
-		if (PeekMessage(&msg,0,0,0,PM_REMOVE)) {
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-		Sleep(1);
-	}
-	*/
 };

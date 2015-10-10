@@ -92,39 +92,39 @@ void ShipWrapper::setShipPointer(ship* representedShip) {
 
 
 std::shared_ptr<UtilityManagerWrapper> ShipWrapper::getOxygenManager(void) {
-	if(oxygenMan != NULL)
-		return oxygenMan;
-	throw std::runtime_error("Manager does not exist!");
+	if(oxygenMan == NULL)
+		throw std::runtime_error("Manager does not exist!");
+	return oxygenMan;
 }
 
 std::shared_ptr<UtilityManagerWrapper> ShipWrapper::getWeaponManager(void) {
-	if (weaponMan != NULL)
-		return weaponMan;
-	throw std::runtime_error("Manager does not exist!");
+	if (weaponMan == NULL)
+		throw std::runtime_error("Manager does not exist!");
+	return weaponMan;
 }
 
 std::shared_ptr<UtilityManagerWrapper> ShipWrapper::getDroneManager(void) {
-	if (droneMan != NULL)
-		return droneMan;
-	throw std::runtime_error("Manager does not exist!");
+	if (droneMan == NULL)
+		throw std::runtime_error("Manager does not exist!");
+	return droneMan;
 }
 
 std::shared_ptr<UtilityManagerWrapper> ShipWrapper::getEngineManager(void) {
-	if (engineMan != NULL)
-		return engineMan;
-	throw std::runtime_error("Manager does not exist!");
+	if (engineMan == NULL)
+		throw std::runtime_error("Manager does not exist!");
+	return engineMan;
 }
 
 std::shared_ptr<UtilityManagerWrapper> ShipWrapper::getMedicalManager(void) {
-	if (medicalMan != NULL)
-		return medicalMan;
-	throw std::runtime_error("Manager does not exist!");
+	if (medicalMan == NULL)
+		throw std::runtime_error("Manager does not exist!");
+	return medicalMan;
 }
 
 std::shared_ptr<UtilityManagerWrapper> ShipWrapper::getShieldManager(void) {
-	if (shieldMan != NULL)
-		return shieldMan;
-	throw std::runtime_error("Manager does not exist!");
+	if (shieldMan == NULL)
+		throw std::runtime_error("Manager does not exist!");
+	return shieldMan;
 }
 
 ship* ShipWrapper::getShipPointer(void) {
@@ -136,27 +136,27 @@ UtilityManagerWrapper::UtilityManagerWrapper(utilityManager* representedUtil) {
 }
 
 bool UtilityManagerWrapper::getOperated(void) {
-	if(pUtil != NULL)
-		return pUtil->operated;
-	throw std::runtime_error("UtilityManager no longer exists!");
+	if(pUtil == NULL)
+		throw std::runtime_error("UtilityManager no longer exists!");
+	return pUtil->operated;
 }
 
 void UtilityManagerWrapper::setOperated(bool op) {
-	if (pUtil != NULL)
-		pUtil->operated = op;
-	throw std::runtime_error("UtilityManager no longer exists!");
+	if (pUtil == NULL)
+		throw std::runtime_error("UtilityManager no longer exists!");
+	pUtil->operated = op;
 }
 
 int UtilityManagerWrapper::getPowerLevel(void) {
-	if (pUtil != NULL)
-		return pUtil->powerLevel;
-	throw std::runtime_error("UtilityManager no longer exists!");
+	if (pUtil == NULL)
+		throw std::runtime_error("UtilityManager no longer exists!");
+	return pUtil->powerLevel;
 }
 
 void UtilityManagerWrapper::setPowerLevel(int power) {
-	if (pUtil != NULL)
-		pUtil->powerLevel = power;
-	throw std::runtime_error("UtilityManager no longer exists!");
+	if (pUtil == NULL)
+		throw std::runtime_error("UtilityManager no longer exists!");
+	pUtil->powerLevel = power;
 }
 
 void UtilityManagerWrapper::setUtilityManagerPointer(utilityManager* representedUtil) {
