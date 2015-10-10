@@ -22,6 +22,14 @@ bool inHangar(void) {
 HHOOK hMouseHook;
 HHOOK hKeyboardHook;
 
+void messageBoxBlock(std::string text, std::string title) {
+	MessageBox(NULL, text.c_str(), title.c_str(), MB_OK + MB_ICONINFORMATION);
+}
+
+void messageBox(std::string text, std::string title) {
+	std::thread msgBox(messageBoxBlock, text, title);
+	msgBox.detach();
+}
 
 LRESULT CALLBACK mouseHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	char window_title[5];
@@ -141,6 +149,10 @@ void setupChai(chaiscript::ChaiScript *chai) {
 	chai->add_global(chaiscript::var(playerWrapper), "playerShip");
 	chai->add(chaiscript::fun(drawString2), "drawString");
 	chai->add(chaiscript::fun(drawRect), "drawRect");
+	chai->add(chaiscript::fun(messageBoxBlock), "messageBox_block");
+	chai->add(chaiscript::fun(messageBoxBlock), "msg_block");
+	chai->add(chaiscript::fun(messageBox), "messageBox");
+	chai->add(chaiscript::fun(messageBox), "msg");
 	chai->add(chaiscript::fun(setColor), "setColor");
 	chai->add(chaiscript::fun(&ShipWrapper::getHealth), "getHealth");
 	chai->add(chaiscript::fun(&ShipWrapper::getCloakImageName), "getCloakImageName");
