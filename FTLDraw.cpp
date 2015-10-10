@@ -4,6 +4,7 @@
 #include <gl\GL.h>
 #include <vector>
 
+
 //vector of functions that take no arguments and return nothing
 std::vector<std::function<void(void)>> hooks;
 
@@ -15,6 +16,10 @@ void drawTriangle (float x1,float y1,float x2,float y2,float x3,float y3) {
 	 glVertex3f(x3, y3, 0.0);
 	glEnd();
 	glDisable(GL_COLOR_MATERIAL);
+}
+
+void setColor(float r, float g, float b, float a) {
+	glColor4f(r, g, b, a);
 }
 
 void drawRect (float x,float y,float w,float h) {
@@ -31,8 +36,13 @@ void drawRect (float x,float y,float w,float h) {
 //Don't inline or it'll mess up the hook's stack frame!
 __declspec(noinline) void callHooks(void) {
 	for(int i=0;i<hooks.size();i++) {
-		std::function<void(void)> f = hooks[i];
-		f();
+		try {
+			std::function<void(void)> f = hooks[i];
+			f();
+		}
+		catch (std::exception e) {
+			MessageBox(NULL, e.what(), "Fail!", MB_OK + MB_ICONINFORMATION);
+		}
 	}
 }
 
