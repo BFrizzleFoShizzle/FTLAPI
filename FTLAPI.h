@@ -8,5 +8,7 @@ extern HANDLE FTLProcess;
 
 extern ShipWrapper *playerWrapper;
 
+extern HINSTANCE hInstance;
+
 void setupChai(chaiscript::ChaiScript *chai);
 
