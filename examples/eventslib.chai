@@ -1,0 +1,103 @@
+// ChaiScript Events helper library
+
+class EventsLibGlobal 
+{
+	var _mouseDownListeners;
+	var _mouseUpListeners;
+	var _keyDownListeners;
+	var _keyUpListeners;
+	var _textInputListeners;
+	
+	def EventsLibGlobal() {
+		this._mouseDownListeners := Vector();
+		this._mouseUpListeners := Vector();
+		this._keyDownListeners := Vector();
+		this._keyUpListeners := Vector();
+		this._textInputListeners := Vector();
+		this._drawListeners := Vector();
+	}
+
+	def addMouseDownListener(obj) {
+		var test := obj;
+		this._mouseDownListeners.push_back_ref(test);
+	}
+
+	def addMouseUpListener(obj) {
+		this._mouseUpListeners.push_back_ref(obj);
+	}
+
+	def addKeyDownListener(obj) {
+		this._keyDownListeners.push_back_ref(obj);
+	}
+
+	def addKeyUpListener(obj) {
+		this._keyUpListeners.push_back_ref(obj);
+	}
+
+	def addDrawListener(obj) {
+		this._drawListeners.push_back_ref(obj);
+	}
+
+	// this is defined in textlib
+	/*
+	def addTextInputListeners(obj)
+	*/
+}
+
+GLOBAL EventsLib := EventsLibGlobal();
+
+def _executeMouseUpHooks() {
+	var range = range(EventsLib._mouseUpListeners);
+	while (!range.empty())
+	{
+		//call function
+		range.front().onMouseUp();
+		range.pop_front()
+	}
+}
+
+def _executeMouseDownHooks() {
+	var range = range(EventsLib._mouseDownListeners);
+	while (!range.empty())
+	{
+		//call function
+		range.front().onMouseDown();
+		range.pop_front()
+	}
+}
+
+def _executeKeyUpHooks(key) {
+	var range = range(EventsLib._keyUpListeners);
+	while (!range.empty())
+	{
+		//call function
+		range.front().onKeyUp();
+		range.pop_front()
+	}
+}
+
+def _executeKeyDownHooks(key) {
+	var range = range(EventsLib._keyDownListeners);
+	while (!range.empty())
+	{
+		//call function
+		range.front().onKeyDown();
+		range.pop_front()
+	}
+}
+
+def _executeDrawHooks() {
+	var range = range(EventsLib._drawListeners);
+	while (!range.empty())
+	{
+		//call function
+		range.front().onDraw();
+		range.pop_front()
+	}
+}
+
+addMouseUpHook(_executeMouseUpHooks);
+addMouseDownHook(_executeMouseDownHooks);
+addKeyUpHook(_executeKeyUpHooks);
+addKeyDownHook(_executeKeyDownHooks);
+addDrawHook(_executeDrawHooks);

@@ -1,0 +1,186 @@
+class TextLibGlobal {
+	var _capsDown;
+	var _shiftDown;
+	var _ctrlDown;
+	def TextLibGlobal() {
+		this._capsDown = false;
+		this._shiftDown = false;
+		this._ctrlDown = false;
+	}
+
+	// checks if vkcode has valid textual representation
+	// this is NOT all-inclusive
+	def vkCodeIsText(key) {
+		if (key == 20 || key == 160 || key == 161 || key == 162 || key == 163) {
+			return false;
+		}
+		return true;
+	}
+
+	// converts vkcode to text
+	def vkCodeToText(key) {
+		// del
+		if (key == 46) {
+			key = 127;
+		}
+		// [ to ]
+		if (key >= 219 && key <= 221) {
+			key = key-128;
+		}
+		// ;
+		if (key == 186) {
+			key = 59;
+		}
+		// =
+		if (key == 187) {
+			key = 61;
+		}
+		// , to /
+		if (key >= 188 && key <= 191) {
+			key = key-144;
+		}
+		// `
+		if (key == 192) {
+			key = 96;
+		}
+		// '
+		if (key == 222) {
+			key = 39;
+		}
+		// apply case
+		if (key>=65 && key <= 90 && !this._capsDown) {
+			key = key+32;
+		}
+		if (this._shiftDown) {
+			// lower
+			if(key>=97 && key<=122) {
+				key = key-32;
+			}
+			// upper
+			else if(key>=65 && key<=90) {
+				key = key+32;
+			}
+			// { to }
+			else if(key>=91 && key<=93) {
+				key = key+32;
+			}
+			// ~
+			else if (key == 96) {
+				key = 126;
+			}
+			// :
+			else if(key == 59) {
+				key = 58;
+			}
+			// +
+			else if (key == 61) {
+				key = 43;
+			}
+			// '
+			else if (key == 39) {
+				key = 34;
+			}
+			// , to /
+			else if (key >= 44 && key <= 47) {
+				if(key == 45) {
+					key = 95;
+				} else {
+					key = key+16;
+				}
+			}
+			// number keys
+			else if(key>=48 && key<=57) {
+				if(key == 48) {
+					key = 41;
+				}
+				else if(key == 50) {
+					key = 64;
+				}
+				else if(key == 54) {
+					key = 94;
+				}
+				else if(key == 55) {
+					key = 38;
+				}
+				else if(key == 56) {
+					key = 42;
+				}
+				else if(key == 57) {
+					key = 40;
+				}
+				else {
+					key = key-16;
+				}
+			}
+		}
+		if(this._ctrlDown) {
+			if(key == 13) {
+				key = 10;
+			}
+		}
+		return key;
+	}
+}
+
+GLOBAL TextLib := TextLibGlobal();
+
+// NOTE: these aren't in the TextLibGlobal class so that people
+// don't try to make more than one TextLibGlobal instance
+
+def _updateVkCodeStateDown(key) {
+	// caps
+	if (key == 20) {
+		TextLib._capsDown = !TextLib._capsDown;
+		return;
+	}
+	// shift
+	if (key == 161 || key == 160) {
+		TextLib._shiftDown = true;
+		return;
+	}
+	if(key == 162 || key == 163) {
+		TextLib._ctrlDown = true;
+		return;
+	}
+}
+
+def _updateVkCodeStateUp(key) {
+	if(key == 161 || key == 160) {
+		TextLib._shiftDown = false;
+		return;
+	}
+	if(key == 162 || key == 163) {
+		TextLib._ctrlDown = false;
+		return;
+	}
+}
+
+// set up state hooks
+addKeyDownHook(_updateVkCodeStateDown);
+addKeyUpHook(_updateVkCodeStateUp);
+
+def EventsLibGlobal::addTextInputListener(obj) {
+	this._textInputListeners.push_back_ref(obj);
+}
+
+// I've decided to keep the EventsLib function separate
+// from the state hooks
+def _executeTextInputHooks(key) {
+	// make sure key has textual representation
+	if(!TextLib.vkCodeIsText(key)) {
+		return;
+	}
+	// convert to text
+	var text = TextLib.vkCodeToText(key);
+
+	var range = range(EventsLib._textInputListeners);
+	while (!range.empty()) {
+		//call function
+		range.front().onTextInput(text);
+		range.pop_front()
+	}
+}
+
+// This also should to be added AFTER the state hooks so that any
+// TextLib internal state is updated BEFORE the hooks are called
+addKeyDownHook(_executeTextInputHooks);

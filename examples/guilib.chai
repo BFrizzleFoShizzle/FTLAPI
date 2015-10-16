@@ -1,0 +1,204 @@
+// ChaiScript GUI helper library
+
+class Point {
+	// consider extending POINT and adding helper methods,
+	// or do that on the C++ side
+	var x;
+	var y;
+	def Point(x,y) {
+		this.x = x;
+		this.y = y;
+	}
+}
+
+class Window
+{
+	var x;
+	var y;
+	var w;
+	var h;
+	var padding;
+	var lastCursor;
+	var dragging;
+	var children;
+	var barHeight;
+	var title;
+
+	// constructor
+	def Window(x,y,w,h)
+	{
+		this.barHeight = 16;
+		this.padding = 2;
+		this.x = x;
+		this.y = y;
+		this.w = w;
+		this.h = this.padding*2;
+		this.title = "";
+		this.dragging = false;
+		this.children := Vector();
+		EventsLib.addMouseDownListener(this);
+		EventsLib.addMouseUpListener(this);
+		EventsLib.addDrawListener(this);
+	}
+	
+	def addChild(obj) {
+		obj.x = this.x+this.padding;
+		if(this.children.size() == 0) {
+			obj.y = this.y+this.padding;
+		} else {
+			obj.y = this.children.back().y+this.children.back().h+this.padding;
+		}
+		obj.w = this.w-this.padding*2;
+		this.h += obj.h+this.padding;
+		this.children.push_back_ref(obj);
+	}
+
+	def update() {
+		var cursor = getCursorPos();
+		if(this.dragging) {
+			this.x += cursor.x-this.lastCursor.x;
+			this.y += cursor.y-this.lastCursor.y;
+			// update children
+			var range = range(this.children);
+			while (!range.empty())
+			{
+				// update child
+				var child := range.front();
+				child.x += cursor.x-this.lastCursor.x;
+				child.y += cursor.y-this.lastCursor.y;
+				range.pop_front()
+			}
+		}
+		this.lastCursor := cursor;
+	}
+	
+	def onMouseDown() {
+		var cursor = getCursorPos();
+		if(this.withinBar(cursor.x, cursor.y)) {
+			this.lastCursor := cursor;
+			this.dragging = true;
+		}
+	}
+
+	def onMouseUp() {
+		this.dragging = false;
+	}
+
+	def withinBounds(x,y){
+		return x>this.x&&y>this.y&&x<this.x+this.w&&y<this.y+this.h;
+	}
+
+	def withinBar(x,y){
+		return x>this.x&&y>this.y-this.barHeight&&x<this.x+this.w&&y<this.y;
+	}
+	
+	// method
+	def onDraw()
+	{
+		// maybe move somewhere more appropriate
+		this.update();
+		setColor(0.4,0.4,0.4,0.8);
+		drawRect(this.x,this.y-this.barHeight,this.w,this.barHeight);
+		setColor(0.8,0.8,0.8,0.8);
+		drawRect(this.x,this.y,this.w,this.h);
+		setColor(1,1,1,0.8);
+		drawString(this.x+this.padding,this.y-this.barHeight+this.padding,this.title);
+	}
+	
+}
+
+class TextBox
+{
+	var x;
+	var y;
+	var w;
+	var h;
+	var text;
+	var charWidth;
+	var lineSpacing;
+	var onEnter;
+	var active;
+	var input;
+
+	// constructor
+	def TextBox(x,y,w,h,text)
+	{
+		this.x = x;
+		this.y = y;
+		this.w = w;
+		this.h = h;
+		this.charWidth = 8;
+		this.lineSpacing = 2;
+		this.text = text;
+		this.active = false;
+		this.input = false;
+		EventsLib.addTextInputListener(this);
+		EventsLib.addMouseDownListener(this);
+		EventsLib.addDrawListener(this);
+	}
+
+	def onTextInput(key) {
+		if(!this.input || !this.active) {
+			return;
+		}
+		// backspace
+		if (key == 8) {
+			this.text = this.text.substr(0,this.text.size()-1);
+		}
+		// delete
+		else if (key == 127) {
+			this.text = this.text.substr(0,this.text.size()-1);
+		}
+		// enter
+		else if (key == 13) {
+			this.onEnter(this);
+		}
+		else {
+			this.text += to_string(char(key));
+		}
+	}
+	
+	def onMouseDown() {
+		var cursor = getCursorPos();
+		if(this.withinBounds(cursor.x, cursor.y)) {
+			this.active = true;
+		} else {
+			this.active = false;
+		}
+	}
+
+	def onMouseUp() {
+		
+	}
+
+	def withinBounds(x,y){
+		return x>this.x&&y>this.y&&x<this.x+this.w&&y<this.y+this.h;
+	}
+	
+	// method
+	def onDraw()
+	{
+		//TODO: add newline support
+		setColor(1,1,1,0.8);
+		var charsPerRow = int(this.w/this.charWidth);
+		// always at least 1 row
+		var rows = (this.text.size()/charsPerRow)+1;
+		// height bounds check
+		if(rows>this.h*this.charWidth) {
+			rows = int(h/this.charWidth);
+		}
+		// draw each row of text
+		var row = 0;
+		for(var i=0;i<this.text.size();++row) {
+			// get our line
+			var text = this.text.substr(i, charsPerRow);
+			if(text.contains('\n')) {
+				text = text.substr(0,text.find("\n"));
+				++i;
+			}
+			drawString(this.x, this.y+row*this.charWidth, text);
+			i += text.size();
+		}
+	}
+}
+
