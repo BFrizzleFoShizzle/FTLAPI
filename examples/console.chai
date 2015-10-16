@@ -1,0 +1,37 @@
+GLOBAL x = 50;
+GLOBAL y = 50;
+GLOBAL mbutton = false;
+GLOBAL chaiScriptOutput = "";
+
+// load import
+
+def executeScript(textBox) {
+	try {
+		var out := eval(textBox.text);
+		if(!out.is_var_null()) {
+			chaiScriptOutput = to_string(out);
+		} else {
+			chaiScriptOutput = "";
+		}
+	} catch (e) {
+		chaiScriptOutput = e.what();
+	}
+}
+
+try {
+	eval_file("eventslib.chai");
+	eval_file("textlib.chai");
+	eval_file("guilib.chai")
+	GLOBAL window := Window(x,y+20,300,100);
+	window.title = "ChaiScript Console"
+	var inText := TextBox(x,y+20,100,100,"This is a test!");
+	inText.input = true;
+	inText.onEnter = executeScript;
+	window.addChild(inText);
+	var outText := TextBox(x,y+20,100,16,"This is a test!");
+	// hook outText up to the output
+	outText.text := chaiScriptOutput;
+	window.addChild(outText);
+} catch(e) {
+	messageBox(e.what(),"Error!");
+}
