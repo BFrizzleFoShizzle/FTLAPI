@@ -102,6 +102,8 @@ int eventFilter (SDL_Event* event){
 	return 1;
 }
 
+
+
 void setupChai(chaiscript::ChaiScript *chai) {
 	// FTL doesn't use an event filter, so this is OK
 	SDL_SetEventFilter((SDL_EventFilter)eventFilter);
@@ -140,5 +142,6 @@ void setupChai(chaiscript::ChaiScript *chai) {
 	chai->add(chaiscript::fun(getCursorPos), "getCursorPos");
 	chai->add(chaiscript::fun(&Point::x), "x");
 	chai->add(chaiscript::fun(&Point::y), "y");
+	chai->add(chaiscript::fun(&SDL_GetTicks), "getTicks");
 	chai->add(chaiscript::fun(inHangar), "inHangar");
 }
