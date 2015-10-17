@@ -8,45 +8,17 @@ class TextLibGlobal {
 		this._ctrlDown = false;
 	}
 
-	// checks if vkcode has valid textual representation
+	// checks if Keycode has valid textual representation
 	// this is NOT all-inclusive
-	def vkCodeIsText(key) {
-		if (key == 20 || key == 160 || key == 161 || key == 162 || key == 163) {
+	def SDLKeycodeIsText(key) {
+		if (key == 301 || key == 303 || key == 304 || key == 305 || key == 306) {
 			return false;
 		}
 		return true;
 	}
 
-	// converts vkcode to text
-	def vkCodeToText(key) {
-		// del
-		if (key == 46) {
-			key = 127;
-		}
-		// [ to ]
-		if (key >= 219 && key <= 221) {
-			key = key-128;
-		}
-		// ;
-		if (key == 186) {
-			key = 59;
-		}
-		// =
-		if (key == 187) {
-			key = 61;
-		}
-		// , to /
-		if (key >= 188 && key <= 191) {
-			key = key-144;
-		}
-		// `
-		if (key == 192) {
-			key = 96;
-		}
-		// '
-		if (key == 222) {
-			key = 39;
-		}
+	// converts Keycode to text
+	def SDLKeycodeToText(key) {
 		// apply case
 		if (key>=65 && key <= 90 && !this._capsDown) {
 			key = key+32;
@@ -127,37 +99,37 @@ GLOBAL TextLib := TextLibGlobal();
 // NOTE: these aren't in the TextLibGlobal class so that people
 // don't try to make more than one TextLibGlobal instance
 
-def _updateVkCodeStateDown(key) {
+def _updateSDLKeycodeStateDown(key) {
 	// caps
-	if (key == 20) {
+	if (key == 301) {
 		TextLib._capsDown = !TextLib._capsDown;
 		return;
 	}
 	// shift
-	if (key == 161 || key == 160) {
+	if (key == 304 || key == 303) {
 		TextLib._shiftDown = true;
 		return;
 	}
-	if(key == 162 || key == 163) {
+	if(key == 306 || key == 305) {
 		TextLib._ctrlDown = true;
 		return;
 	}
 }
 
-def _updateVkCodeStateUp(key) {
-	if(key == 161 || key == 160) {
+def _updateSDLKeycodeStateUp(key) {
+	if(key == 304 || key == 303) {
 		TextLib._shiftDown = false;
 		return;
 	}
-	if(key == 162 || key == 163) {
+	if(key == 306 || key == 305) {
 		TextLib._ctrlDown = false;
 		return;
 	}
 }
 
 // set up state hooks
-addKeyDownHook(_updateVkCodeStateDown);
-addKeyUpHook(_updateVkCodeStateUp);
+addKeyDownHook(_updateSDLKeycodeStateDown);
+addKeyUpHook(_updateSDLKeycodeStateUp);
 
 def EventsLibGlobal::addTextInputListener(obj) {
 	this._textInputListeners.push_back_ref(obj);
@@ -167,11 +139,11 @@ def EventsLibGlobal::addTextInputListener(obj) {
 // from the state hooks
 def _executeTextInputHooks(key) {
 	// make sure key has textual representation
-	if(!TextLib.vkCodeIsText(key)) {
+	if(!TextLib.SDLKeycodeIsText(key)) {
 		return;
 	}
 	// convert to text
-	var text = TextLib.vkCodeToText(key);
+	var text = TextLib.SDLKeycodeToText(key);
 
 	var range = range(EventsLib._textInputListeners);
 	while (!range.empty()) {

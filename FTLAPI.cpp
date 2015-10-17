@@ -2,6 +2,8 @@
 #include "FTLDraw.h"
 #include "TextHelper.h"
 #include "FTLShipSelector.h"
+#include <SDL.h>
+//#include <SDL_events.h>
 
 ShipWrapper *playerWrapper = new ShipWrapper();
 
@@ -19,8 +21,10 @@ bool inHangar(void) {
 	return false;
 }
 
-HHOOK hMouseHook;
-HHOOK hKeyboardHook;
+struct Point {
+	int x;
+	int y;
+};
 
 void messageBoxBlock(std::string text, std::string title) {
 	MessageBox(NULL, text.c_str(), title.c_str(), MB_OK + MB_ICONINFORMATION);
@@ -29,71 +33,6 @@ void messageBoxBlock(std::string text, std::string title) {
 void messageBox(std::string text, std::string title) {
 	std::thread msgBox(messageBoxBlock, text, title);
 	msgBox.detach();
-}
-
-LRESULT CALLBACK mouseHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
-	char window_title[5];
-	HWND foreground = GetForegroundWindow();
-	GetWindowText(foreground, window_title, 5);
-	// ignore if not our window (should make this better...)
-	if (strcmp(window_title, "FTL")==0) {
-		if (wParam == WM_LBUTTONDOWN)
-		{
-			for (int i = 0; i < mouseDownHooks.size(); i++) {
-				try {
-					mouseDownHooks[i]();
-				}
-				catch (std::exception e) {
-					messageBox(e.what(), "Mouse hook fail!");
-				}
-			}
-		}
-		if (wParam == WM_LBUTTONUP)
-		{
-			for (int i = 0; i < mouseUpHooks.size(); i++) {
-				try {
-					mouseUpHooks[i]();
-				}
-				catch (std::exception e) {
-					messageBox(e.what(), "Mouse hook fail!");
-				}
-			}
-		}
-	}
-	return CallNextHookEx(hMouseHook, nCode, wParam, lParam);
-}
-
-LRESULT CALLBACK keyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
-	char window_title[5];
-	HWND foreground = GetForegroundWindow();
-	GetWindowText(foreground, window_title, 5);
-	// ignore if not our window (should make this better...)
-	KBDLLHOOKSTRUCT *params = (KBDLLHOOKSTRUCT*)lParam;
-	if (strcmp(window_title, "FTL") == 0) {
-		if (wParam == WM_KEYDOWN)
-		{
-			for (int i = 0; i < keyDownHooks.size(); i++) {
-				try {
-					keyDownHooks[i](params->vkCode);
-				}
-				catch (std::exception e) {
-					messageBox(e.what(), "KeyDown hook fail!");
-				}
-			}
-		}
-		if (wParam == WM_KEYUP)
-		{
-			for (int i = 0; i < keyUpHooks.size(); i++) {
-				try {
-					keyUpHooks[i](params->vkCode);
-				}
-				catch (std::exception e) {
-					messageBox(e.what(), "KeyUp hook fail!");
-				}
-			}
-		}
-	}
-	return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
 }
 
 void addMouseUpHook(std::function<void(void)> function) {
@@ -112,40 +51,62 @@ void addKeyDownHook(std::function<void(int)> function) {
 	keyDownHooks.push_back(function);
 }
 
-DWORD WINAPI hookMouse(LPVOID lpParam) {
-	ftlWindow = FindWindow(NULL, "FTL");
-	//HINSTANCE hInstance = GetModuleHandle(NULL);
-	//set mouse hook
-	DWORD threadID = GetWindowThreadProcessId(ftlWindow, NULL);
-	//DWORD threadID = GetCurrentThreadId();
-	hMouseHook = SetWindowsHookEx(WH_MOUSE_LL, mouseHookProc, hInstance, NULL);
-	hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, keyboardHookProc, hInstance, NULL);
-	//MessageBox(NULL, output, "test", MB_OK + MB_ICONINFORMATION);
-	MSG message;
-	while (GetMessage(&message, NULL, 0, 0)) {
-		TranslateMessage(&message);
-		DispatchMessage(&message);
-	}
-	return 0;
+
+std::shared_ptr<Point> getCursorPos(void) {
+	std::shared_ptr<Point> p = std::shared_ptr<Point>(new Point());
+	SDL_GetMouseState(&p->x, &p->y);
+	return p;
 }
 
-
-std::shared_ptr<POINT> getCursorPos(void) {
-	if (ftlWindow == NULL)
-		throw std::runtime_error("Mouse not hooked!");
-	LPPOINT p = new POINT();
-	if (GetCursorPos(p)) {
-		if (ScreenToClient(ftlWindow, p)) {
-			std::shared_ptr<POINT> pt = std::shared_ptr<POINT>(p);
-			return pt;
+int eventFilter (SDL_Event* event){
+	if (event->type == SDL_MOUSEBUTTONDOWN && event->button.button == SDL_BUTTON_LEFT) {
+		for (int i = 0; i < mouseDownHooks.size(); i++) {
+			try {
+				mouseDownHooks[i]();
+			}
+			catch (std::exception e) {
+				messageBox(e.what(), "Mouse hook fail!");
+			}
 		}
-		throw std::runtime_error("ScreenToClient fail!");
 	}
-	throw std::runtime_error("GetCursorPos fail!");
+	if (event->type == SDL_MOUSEBUTTONUP && event->button.button == SDL_BUTTON_LEFT) {
+		for (int i = 0; i < mouseDownHooks.size(); i++) {
+			try {
+				mouseUpHooks[i]();
+			}
+			catch (std::exception e) {
+				messageBox(e.what(), "Mouse hook fail!");
+			}
+		}
+	}
+	if (event->type == SDL_KEYDOWN) {
+		for (int i = 0; i < keyDownHooks.size(); i++) {
+			try {
+				keyDownHooks[i](event->key.keysym.sym);
+			}
+			catch (std::exception e) {
+				messageBox(e.what(), "KeyDown hook fail!");
+			}
+		}
+	}
+	if (event->type == SDL_KEYUP) {
+		for (int i = 0; i < keyUpHooks.size(); i++) {
+			try {
+				keyUpHooks[i](event->key.keysym.sym);
+			}
+			catch (std::exception e) {
+				messageBox(e.what(), "KeyUp hook fail!");
+			}
+		}
+	}
+	return 1;
 }
 
 void setupChai(chaiscript::ChaiScript *chai) {
-	CreateThread(NULL, 0, &hookMouse, NULL, 0, NULL);
+	// FTL doesn't use an event filter, so this is OK
+	SDL_SetEventFilter((SDL_EventFilter)eventFilter);
+	// Key repeat (useful for text input, etc)
+	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 	chai->add_global(chaiscript::var(playerWrapper), "playerShip");
 	chai->add(chaiscript::fun(drawString2), "drawString");
 	chai->add(chaiscript::fun(drawRect), "drawRect");
@@ -177,7 +138,7 @@ void setupChai(chaiscript::ChaiScript *chai) {
 	chai->add(chaiscript::fun(addKeyDownHook), "addKeyDownHook");
 	chai->add(chaiscript::fun(addKeyUpHook), "addKeyUpHook");
 	chai->add(chaiscript::fun(getCursorPos), "getCursorPos");
-	chai->add(chaiscript::fun(&POINT::x), "x");
-	chai->add(chaiscript::fun(&POINT::y), "y");
+	chai->add(chaiscript::fun(&Point::x), "x");
+	chai->add(chaiscript::fun(&Point::y), "y");
 	chai->add(chaiscript::fun(inHangar), "inHangar");
 }
