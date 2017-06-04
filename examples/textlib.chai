@@ -11,7 +11,7 @@ class TextLibGlobal {
 	// checks if Keycode has valid textual representation
 	// this is NOT all-inclusive
 	def SDLKeycodeIsText(key) {
-		if (key == 301 || key == 303 || key == 304 || key == 305 || key == 306) {
+		if (key == 301 || key == 303 || key == 304 || key == 305 || key == 306 || key == 273 || key == 274 || key == 275 || key == 276) {
 			return false;
 		}
 		return true;
@@ -20,8 +20,8 @@ class TextLibGlobal {
 	// converts Keycode to text
 	def SDLKeycodeToText(key) {
 		// apply case
-		if (key>=65 && key <= 90 && !this._capsDown) {
-			key = key+32;
+		if (key>=97 && key <= 122 && this._capsDown) {
+			key = key-32;
 		}
 		if (this._shiftDown) {
 			// lower
@@ -85,7 +85,7 @@ class TextLibGlobal {
 				}
 			}
 		}
-		if(this._ctrlDown) {
+		if(this._shiftDown) {
 			if(key == 13) {
 				key = 10;
 			}

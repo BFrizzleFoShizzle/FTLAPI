@@ -114,6 +114,8 @@ class TextBox
 	var w;
 	var h;
 	var text;
+	var cursor;
+	var lastUpdate;
 	var charWidth;
 	var lineSpacing;
 	var onEnter;
@@ -130,31 +132,135 @@ class TextBox
 		this.charWidth = 8;
 		this.lineSpacing = 2;
 		this.text = text;
+		this.cursor = 0;
+		this.offset = 0;
+		this.cursorFlashTime = 0.5;
+		this.lastUpdate = getTicks();
 		this.active = false;
 		this.input = false;
 		EventsLib.addTextInputListener(this);
+		EventsLib.addKeyDownListener(this);
 		EventsLib.addMouseDownListener(this);
 		EventsLib.addDrawListener(this);
 	}
 
+	// text input
 	def onTextInput(key) {
 		if(!this.input || !this.active) {
 			return;
 		}
 		// backspace
 		if (key == 8) {
-			this.text = this.text.substr(0,this.text.size()-1);
+			if(this.cursor != 0) {
+				this.text = this.text.substr(0,this.cursor-1)+this.text.substr(this.cursor,this.text.size());
+				--this.cursor;
+			}
 		}
 		// delete
 		else if (key == 127) {
-			this.text = this.text.substr(0,this.text.size()-1);
+			if(this.text.size() > this.cursor) {
+				this.text = this.text.substr(0,this.cursor)+this.text.substr(this.cursor+1,this.text.size());
+			}
 		}
 		// enter
 		else if (key == 13) {
 			this.onEnter(this);
 		}
 		else {
-			this.text += to_string(char(key));
+			this.lastUpdate = getTicks();
+			// insert char at cursor
+			this.text = this.text.substr(0,this.cursor)+to_string(char(key))+this.text.substr(this.cursor,this.text.size());
+			++this.cursor;
+		}
+	}
+
+	def onKeyDown(key) {
+		// don't process if not active
+		if(!this.active) {
+			return;
+		}
+		// up
+		if(key == 273) {
+			
+		} 
+		// down
+		else if(key == 274 && this.cursor != this.text.size()) {
+			var charsPerRow = int(this.w/this.charWidth);
+			var row = 0;
+			var rowStart = 0;
+			// start and end of row with cursor;
+			for(var i=this.offset;i<this.text.size();++row) {
+				// get our line
+				rowStart = i;
+				i = this.getNextLineOffset(i);
+				if(this.cursor>=rowStart && this.cursor<i) {
+					break;
+				}
+			}
+			// get 
+			var nextLineStart = this.getNextLineOffset(this.cursor);
+			var nextLineEnd = this.getNextLineOffset(nextLineStart)-1;
+			this.cursor = min(nextLineStart+(this.cursor-rowStart),nextLineEnd);
+			// finally, scroll down if needed
+			if(row>this.h/this.charWidth) {
+				this.offset = this.getNextLineOffset(this.offset);
+			}
+		}
+		// right
+		else if(key == 275 && this.cursor<this.text.size()) {
+			++this.cursor;
+			this.lastUpdate = getTicks();
+			if(!this.offsetWithinDisplay(this.cursor)) {
+				this.offset = this.getNextLineOffset(this.offset);
+			}
+		}
+		// left
+		else if(key == 276 && this.cursor != 0) {
+			--this.cursor;
+			this.lastUpdate = getTicks();
+			if(this.cursor<this.offset) {
+				this.offset = this.getPreviousLineOffset(this.offset);
+			}
+		}
+	}
+
+	// raturns index of first char of next line
+	def getNextLineOffset(offset) {
+		if(offset >= this.text.size()) {
+			return this.text.size()+1;
+		}
+		var charsPerRow = int(this.w/this.charWidth);
+		var newLine = this.text.substr(offset,charsPerRow).find("\n");
+		if(newLine == -1) {
+			if(offset+charsPerRow<this.text.size()+1) {
+				return offset+charsPerRow;
+			} else {
+				return this.text.size()+1;
+			}
+		} else {
+			return offset+newLine+1;
+		}
+	}
+
+	// returns index of first char of previous line
+	def getPreviousLineOffset(offset) {
+		if(offset <= 0) {
+			return 0;
+		}
+		var charsPerRow = int(this.w/this.charWidth);
+		// check if previous line contains an endline
+		var prevHardLineStart = max((offset-1)-charsPerRow,0);
+		var newLine = this.text.substr(prevHardLineStart,min(charsPerRow,offset-1)).find_last_of("\n");
+		if(newLine == -1) {
+			// if the previous row does not contain an endline, subtract one, or set offset to 0
+			if(offset-charsPerRow>0) {
+				return offset-charsPerRow;
+			} else {
+				return 0;
+			}
+		} else {
+			// Previous line contains a newline, change to the beginning of the line
+			return (prevHardLineStart+newLine+1);
 		}
 	}
 	
@@ -169,6 +275,28 @@ class TextBox
 
 	def onMouseUp() {
 		
+	}
+
+
+	def offsetWithinDisplay(offset) {
+		var charsPerRow = int(this.w/this.charWidth);
+		var row = 0;
+		var rowStart = 0;
+		// start and end of row with cursor;
+		for(var i=this.offset;i<this.text.size() && row<this.getMaxRows();++row) {
+			// get our line
+			rowStart = i;
+			i = this.getNextLineOffset(i);
+			if(offset>=rowStart && offset<i) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// update this if you ever add padding
+	def getMaxRows() {
+		return int(this.h/this.charWidth);
 	}
 
 	def withinBounds(x,y){
@@ -189,7 +317,10 @@ class TextBox
 		}
 		// draw each row of text
 		var row = 0;
-		for(var i=0;i<this.text.size();++row) {
+		var oldPos;
+		for(var i=this.offset;i<this.text.size();++row) {
+			// for checking whether cursor is in the line
+			oldPos = i;
 			// get our line
 			var text = this.text.substr(i, charsPerRow);
 			if(text.contains('\n')) {
@@ -198,6 +329,31 @@ class TextBox
 			}
 			drawString(this.x, this.y+row*this.charWidth, text);
 			i += text.size();
+			// draw cursor if it's in the line
+			// TODO: refactor
+			if(this.input && this.active && this.cursor>=oldPos && this.cursor<i) {
+				// check flash time
+				var timeElapsed = float(getTicks()-this.lastUpdate)/1000;
+				if(int(timeElapsed/this.cursorFlashTime)%2==0) {
+					var cursorPos = this.cursor-oldPos;
+					drawRect(this.x+cursorPos*this.charWidth,this.y+row*this.charWidth,2,this.charWidth);
+				}
+			}
+		}
+		// draw cursor if it's at the end
+		if(this.input && this.active && this.cursor == this.text.size()) {
+			// check flash time
+			var timeElapsed = float(getTicks()-this.lastUpdate)/1000;
+			if(int(timeElapsed/this.cursorFlashTime)%2==0) {
+				// check last char for endline
+				if(this.text.size() == 0 || this.text.substr(this.text.size()-1,1) == "\n") {
+					var cursorPos = 0;
+					drawRect(this.x+cursorPos*this.charWidth,this.y+row*this.charWidth,2,this.charWidth);
+				} else {
+					var cursorPos = this.cursor-oldPos;
+					drawRect(this.x+cursorPos*this.charWidth,this.y+(row-1)*this.charWidth,2,this.charWidth);
+				}
+			}
 		}
 	}
 }

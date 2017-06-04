@@ -71,7 +71,7 @@ def _executeKeyUpHooks(key) {
 	while (!range.empty())
 	{
 		//call function
-		range.front().onKeyUp();
+		range.front().onKeyUp(key);
 		range.pop_front()
 	}
 }
@@ -81,7 +81,7 @@ def _executeKeyDownHooks(key) {
 	while (!range.empty())
 	{
 		//call function
-		range.front().onKeyDown();
+		range.front().onKeyDown(key);
 		range.pop_front()
 	}
 }
