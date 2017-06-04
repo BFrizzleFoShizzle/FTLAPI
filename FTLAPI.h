@@ -10,5 +10,8 @@ extern ShipWrapper *playerWrapper;
 
 extern HINSTANCE hInstance;
 
+// char so that offsets are byte-size
+extern char* mainStackBase;
+
 void setupChai(chaiscript::ChaiScript *chai);
 

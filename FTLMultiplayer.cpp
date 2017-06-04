@@ -6,6 +6,8 @@
 #include "DirtyHooker.h"
 #include <cstdlib>
 #include <windows.h>
+#include <winternl.h>
+#include <tlhelp32.h>
 #include <cstdio>
 #include <ctime>
 #include <gl\GL.h>
@@ -22,6 +24,8 @@ chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
 HANDLE FTLProcess;
 
 HINSTANCE hInstance;
+
+char* mainStackBase;
 
 
 void updateShip(void) {
@@ -49,8 +53,80 @@ HookAddr getShipCreateHook(void) {
 	return output;
 }
 
+DWORD GetMainThreadId()
+{
+	HANDLE h = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+	if (h != INVALID_HANDLE_VALUE) {
+		THREADENTRY32 te;
+		te.dwSize = sizeof(te);
+		if (Thread32First(h, &te)) {
+			do {
+				if (te.dwSize >= FIELD_OFFSET(THREADENTRY32, th32OwnerProcessID) +
+					sizeof(te.th32OwnerProcessID) &&
+					te.th32OwnerProcessID == GetCurrentProcessId()) {
+					return te.th32ThreadID;
+				}
+				te.dwSize = sizeof(te);
+			} while (Thread32Next(h, &te));
+		}
+		CloseHandle(h);
+	}
+	
+	return 0;
+}
+
+typedef LONG KPRIORITY;
+
+typedef struct _CLIENT_ID {
+	HANDLE UniqueProcess;
+	HANDLE UniqueThread;
+} CLIENT_ID;
+
+typedef struct THREAD_BASIC_INFORMATION
+{
+	NTSTATUS                ExitStatus;
+	NT_TIB*                 TebBaseAddress;
+	CLIENT_ID               ClientId;
+	KAFFINITY               AffinityMask;
+	KPRIORITY               Priority;
+	KPRIORITY               BasePriority;
+} THREAD_BASIC_INFORMATION, *PTHREAD_BASIC_INFORMATION;
+
+void* GetMainThreadStackBase()
+{
+	int threadID = GetMainThreadId();
+	HANDLE mainThread = OpenThread(THREAD_ALL_ACCESS, false, threadID);
+	
+	THREAD_BASIC_INFORMATION basicInfo = { 0 };
+	
+	bool loadedManually = false;
+	HMODULE module = GetModuleHandle("ntdll.dll");
+
+	if (!module)
+	{
+		module = LoadLibrary("ntdll.dll");
+		loadedManually = true;
+	}
+	//SuspendThread(threadID);
+
+	NTSTATUS(__stdcall *NtQueryInformationThread)(HANDLE ThreadHandle, THREADINFOCLASS ThreadInformationClass, PVOID ThreadInformation, ULONG ThreadInformationLength, PULONG ReturnLength);
+	NtQueryInformationThread = reinterpret_cast<decltype(NtQueryInformationThread)>(GetProcAddress(module, "NtQueryInformationThread"));
+
+	// Get TEB address
+	NtQueryInformationThread(mainThread, (THREADINFOCLASS)0, &basicInfo, sizeof(THREAD_BASIC_INFORMATION), NULL);
+	if (loadedManually)
+	{
+		FreeLibrary(module);
+	}
+	// Read stack base from TEB/TIB
+	return basicInfo.TebBaseAddress->StackBase;
+}
+
 DWORD WINAPI FTLM_Main (LPVOID lpParam)
 {
+	// find the main thread's stack
+	mainStackBase = (char*)GetMainThreadStackBase();
+
 	FTLProcess = GetCurrentProcess();
 	//this will also hook glfinish
 	FTLSSMain();

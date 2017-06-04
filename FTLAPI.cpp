@@ -13,7 +13,7 @@ std::vector<std::function<void(int)>> keyUpHooks;
 std::vector<std::function<void(int)>> keyDownHooks;
 
 bool inHangar(void) {
-	bool *inHangar = (bool*)0x0028EECC;
+	bool *inHangar = (bool*)(mainStackBase - 0x1144);
 	if (inHangar != NULL) {
 		return *inHangar;
 	}

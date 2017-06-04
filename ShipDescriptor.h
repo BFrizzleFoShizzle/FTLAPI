@@ -1,6 +1,6 @@
 #pragma once
 
-int playerShipsStack = 0x0028EF6C;
+//int playerShipsStack = 0x0028EF6C;
 int playerShipsExe = 0x0079BE2C;
 
 struct ShipDescriptor {

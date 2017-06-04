@@ -153,8 +153,8 @@ __declspec(noinline) void dealWithClick(void) {
 		//GetWindowText(ftlWindow,output,50);
 		//MessageBox(NULL, output, "test", MB_OK + MB_ICONINFORMATION);
 	}
-	//check if in hangar
-	if(*((bool*)0x0028EECC)) {
+	//check if in hangar (stack grows down, negative offset)
+	if(*((bool*)(mainStackBase-0x1144))) {
 		//button 1
 		if(x>25 && x<95 && y>175 && y<210) {
 			rotBackwardPlayerShip();
@@ -221,7 +221,7 @@ void drawStuff(void) {
 		drawString(200.0f,y,output);
 	}
 	//if in hangar, draw custom UI stuff
-	if(*((bool*)0x0028EECC)) {
+	if(*((bool*)mainStackBase - 0x1144)) {
 		//(5, 110) (185, 110) (185, 340) (5, 340)
 		//glColor3f(0.5,0.5,0.5);
 		//drawRect(5,110,180,231);
