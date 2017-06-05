@@ -27,7 +27,10 @@ int ShipWrapper::getHealth(void) {
 
 void ShipWrapper::setHealth(int newHealth) {
 	if (pShip != NULL)
+	{
 		pShip->health = newHealth;
+		return;
+	}
 	throw std::runtime_error("Ship not created");
 }
 
