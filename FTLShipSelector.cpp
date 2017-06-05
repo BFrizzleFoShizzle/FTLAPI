@@ -170,12 +170,9 @@ __declspec(noinline) void dealWithClick(void) {
 
 }
 
-void hookClick(void){
+__declspec(naked) void hookClick(void){
 	__asm
 	{
-		//undo VC++ crap
-		pop edi;
-		pop ebx;
 		//apply overwritten code
 		movzx edx,word ptr [ebx+04];
 		mov [esp], edx;

@@ -64,15 +64,16 @@ __declspec(noinline) void RETHook6Byte(DWORD instruction, void* function, HANDLE
 	}
 }
 
-//replaces instruction with  call &function (near, absolute)
-//example usage: CALLHook6Byte(0x12345678, functionName);
-void CALLPHook6Byte(DWORD instruction, void* function, HANDLE process) {
-	BYTE hook[6] = {0xFF, 0x15, 0x00, 0x00, 0x00, 0x00};
+//replaces instruction with  call &function (near, relative)
+//example usage: CALLHook5Byte(0x12345678, functionName);
+void CALLHook5Byte(DWORD instruction, void* function, HANDLE process) {
+	DWORD offset = ((DWORD)function) - (instruction + 5);
+	BYTE hook[5] = {0xE8, 0x00, 0x00, 0x00, 0x00};
 	//write function address to PUSH instruction, bytes are in reverse order
-	hook[2] = ((DWORD)function>>0)&0xFF;
-	hook[3] = ((DWORD)function>>8)&0xFF;
-	hook[4] = ((DWORD)function>>16)&0xFF;
-	hook[5] = ((DWORD)function>>24)&0xFF;
+	hook[1] = ((DWORD)offset >>0)&0xFF;
+	hook[2] = ((DWORD)offset >>8)&0xFF;
+	hook[3] = ((DWORD)offset >>16)&0xFF;
+	hook[4] = ((DWORD)offset >>24)&0xFF;
 	// write hook to process memory, create popup on success or failiure if debug
 	char message[50];
 	SIZE_T bytesWritten = 0;
@@ -141,6 +142,37 @@ void RET6AutoHookASMBlock(HookAddr hook, DWORD replacedInstruction, int replaced
 	// and NOP the rest of the copied bytes so it dissassembles nicely ;)
 	RETHook6Byte(replacedInstruction, hookCopy, process);
 	NOP(replacedInstruction+6, replacedInstructionsLen - 6, process);
+}
+
+// Automagically generates the code for linking up the naked function specified by hook
+// at replacedInstruction, including copying and linking up the replaced instructions so
+// that they still get executed after your hook code.
+// Note: because the naked function is executed with a call instruction, the stack is offet 4 bytes.
+// The naked function is responsible for maintaining the callers registers and stack
+// The replaced instruction(s) MUST be greater than 5 bytes
+// replacedInstructionsLen MUST be greater than 5, and should be the length required to replace
+// whole instructions e.g. if the first instruction at the address is 4 bytes long, and the second
+// is 5 bytes long, replacedInstructionsLen must be 9 (4<5, 4+5=9, !9<6, ok) in order to not 
+// break these instructions
+void RET6CALL5AutoHookNaked(void* hook, DWORD replacedInstruction, int replacedInstructionsLen, HANDLE process) {
+	// add jmps so game code -> hook code -> backup code -> game code
+	char out[150];
+	// allocate memory for copied instructions
+	BYTE* instructionsCopy = (BYTE*)VirtualAlloc(NULL, replacedInstructionsLen+5+6, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+	// CALL hook to naked function
+	CALLHook5Byte((DWORD)(instructionsCopy), hook, process);
+	// copy (to be) overwritten instructions
+	SIZE_T bytesWritten = 0;
+	ReadProcessMemory(process, (VOID*)(replacedInstruction), instructionsCopy+5, replacedInstructionsLen, &bytesWritten);
+	if (bytesWritten != replacedInstructionsLen) {
+		sprintf(out, "Failed hook 1: %x, only wrote: %i, should have written: %i", replacedInstruction, bytesWritten, replacedInstructionsLen);
+		MessageBox(NULL, out, "test", MB_OK + MB_ICONINFORMATION);
+	}
+	//use RET to jump back to game's code after hook
+	RETHook6Byte((DWORD)(instructionsCopy + replacedInstructionsLen + 5), (void*)(replacedInstruction + replacedInstructionsLen), process);
+	// RET from game's code to hook start
+	RETHook6Byte(replacedInstruction, instructionsCopy, process);
+	NOP(replacedInstruction + 6, replacedInstructionsLen - 6, process);
 }
 
 // Function is safely called

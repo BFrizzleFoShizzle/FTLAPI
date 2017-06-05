@@ -33,24 +33,12 @@ void updateShip(void) {
 }
 
 // returns a HookAddr containing the hook code defined in the function
-HookAddr getShipCreateHook(void) {
-	HookAddr output;
-	void* p1;
-	void* p2;
+__declspec(naked) void ShipCreateHook(void) {
 	__asm {
-		//jump to hook addr calculation code
-		jmp hookEnd;
-	hookStart:
 		//hook asm
-		mov [playerShip], eax;
-	hookEnd:
-		mov [p1], offset hookStart;
-		mov [p2], offset hookEnd;
-
+		mov[playerShip], eax;
+		ret;
 	}
-	output.startAddress = (DWORD)p1;
-	output.endAddress = (DWORD)p2;
-	return output;
 }
 
 DWORD GetMainThreadId()
@@ -132,9 +120,9 @@ DWORD WINAPI FTLM_Main (LPVOID lpParam)
 	FTLSSMain();
 	//add ship creation hook
 	DWORD shipCreationAddr = 0x400000 + 0x6314C;
-	//function hook first, this means it gets called after the ASM block hook
+	//function hook first, this means it gets called after the naked hook
 	RET6AutoHookFunction(updateShip, shipCreationAddr, 6, FTLProcess);
-	RET6AutoHookASMBlock(getShipCreateHook(), shipCreationAddr, 6, FTLProcess);
+	RET6CALL5AutoHookNaked(ShipCreateHook, shipCreationAddr, 6, FTLProcess);
 	//set up chai
 	setupChai(&chai);
 	//execute test script
