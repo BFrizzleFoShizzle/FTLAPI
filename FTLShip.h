@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 
-struct unit {
+struct Unit {
 	char unknown1[0xC];
 	float x; //current x
 	float y; //current y
@@ -23,7 +23,7 @@ struct unit {
 	char* name2; // ...
 };
 
-struct utilityManager {
+struct UtilityManager {
 	char unknown1[0x34];
 	char operated; //0 if not operated, 1 if operated
 	char unknown2[4];
@@ -36,54 +36,58 @@ struct utilityManager {
 
 
 
-struct ship {
+struct Ship {
 	char unknown1[0x24];
-	utilityManager* oxygenManager;
+	UtilityManager* oxygenManager;
 	char unknown2[0x7C];
-	utilityManager* shieldManager;
-	utilityManager* weaponManager;
-	utilityManager* droneManager; //haven't reversed the drone manager or drones yet
-	utilityManager* engineManager;
-	utilityManager* medicalManager;
+	UtilityManager* shieldManager;
+	UtilityManager* weaponManager;
+	UtilityManager* droneManager; //haven't reversed the drone manager or drones yet
+	UtilityManager* engineManager;
+	UtilityManager* medicalManager;
 	char unknown3[0xC];
-	unit** units; //(units[0]) = pointer to first unit on ship
-	unit** unitsEnd; //pointer to ONE PAST the last element of units array
+	Unit** units; //(units[0]) = pointer to first unit on ship
+	Unit** unitsEnd; //pointer to ONE PAST the last element of units array
 	char unknown4[0x60];
 	int health;
-	char unknown5[0x30];
+	int maxHealth; // 0x130 | 0x3C
+	char unknown5[0x2C];
 	char* shipImage;
 	char unknown6[0x24];
-	char* cloakImage;
-	char unknown7[0x32C];
-	char* id;
+	char* cloakImage; // 188
+	char unknown7[0x27C];
+	Ship* enemyShip; // 0x404 | 0x310
+	char unknown8[0x44];
+	int scrap; // 0x450 | 0x35C
+	char unknown9[0x64];
+	char* id;// 4B8
 	char* name;
 	char* displayName;
 	//skip the rest for now...
 };
 
-extern ship* ships;
-extern ship* playerShip;
+extern Ship* playerShip;
 
-ship* getPlayerShip(void);
+Ship* GetPlayerShip(void);
 
 ship* getEnemyShip(void);
 
 class UtilityManagerWrapper {
 public:
-	UtilityManagerWrapper(utilityManager* representedUtil);
+	UtilityManagerWrapper(UtilityManager* representedUtil);
 	bool getOperated(void);
 	void setOperated(bool);
 	int getPowerLevel(void);
 	void setPowerLevel(int power);
-	void setUtilityManagerPointer(utilityManager* representedUtil);
-	utilityManager* getUtilityManagerPointer(void);
+	void setUtilityManagerPointer(UtilityManager* representedUtil);
+	UtilityManager* getUtilityManagerPointer(void);
 private:
-	utilityManager *pUtil;
+	UtilityManager *pUtil;
 };
 
 class ShipWrapper {
 public:
-	ShipWrapper(ship* representedShip);
+	ShipWrapper(Ship* representedShip);
 	ShipWrapper(void);
 	int getHealth(void);
 	void setHealth(int);
@@ -98,10 +102,10 @@ public:
 	std::shared_ptr<UtilityManagerWrapper> getEngineManager(void);
 	std::shared_ptr<UtilityManagerWrapper> getMedicalManager(void);
 	std::shared_ptr<UtilityManagerWrapper> getShieldManager(void);
-	void setShipPointer(ship* representedShip);
-	ship* getShipPointer(void);
+	void setShipPointer(Ship* representedShip);
+	Ship* getShipPointer(void);
 private:
-	ship *pShip;
+	Ship *pShip;
 	std::shared_ptr<UtilityManagerWrapper> oxygenMan;
 	std::shared_ptr<UtilityManagerWrapper> weaponMan;
 	std::shared_ptr<UtilityManagerWrapper> droneMan;

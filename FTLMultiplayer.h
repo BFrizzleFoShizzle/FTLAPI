@@ -3,5 +3,4 @@
 #include "FTLShip.h"
 #include <Windows.h>
 
-ship* ships = NULL;
-ship* playerShip = NULL;
+Ship* playerShip = NULL;

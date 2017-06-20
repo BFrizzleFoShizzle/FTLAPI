@@ -28,12 +28,12 @@ HINSTANCE hInstance;
 char* mainStackBase;
 
 
-void updateShip(void) {
-	playerWrapper->setShipPointer(playerShip);
+void UpdatePlayerShip(void) {
+	playerShipWrapper->setShipPointer(playerShip);
 }
 
 // returns a HookAddr containing the hook code defined in the function
-__declspec(naked) void ShipCreateHook(void) {
+__declspec(naked) void PlayerShipCreateHook(void) {
 	__asm {
 		//hook asm
 		mov[playerShip], eax;
@@ -119,10 +119,11 @@ DWORD WINAPI FTLM_Main (LPVOID lpParam)
 	//this will also hook glfinish
 	FTLSSMain();
 	//add ship creation hook
-	DWORD shipCreationAddr = 0x400000 + 0x6314C;
+	// could hook directly after player ship constructor at 0x400000 + 0x1DCB85, but ship is NOT fully created at that point...
+	DWORD playerShipCreationAddr = 0x400000 + 0x6314C; // 6 bytes
 	//function hook first, this means it gets called after the naked hook
-	RET6AutoHookFunction(updateShip, shipCreationAddr, 6, FTLProcess);
-	RET6CALL5AutoHookNaked(ShipCreateHook, shipCreationAddr, 6, FTLProcess);
+	RET6AutoHookFunction(UpdatePlayerShip, playerShipCreationAddr, 6, FTLProcess);
+	RET6CALL5AutoHookNaked(PlayerShipCreateHook, playerShipCreationAddr, 6, FTLProcess);
 	//set up chai
 	setupChai(&chai);
 	//execute test script

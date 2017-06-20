@@ -2,7 +2,7 @@
 #include <Windows.h>
 #include <stdexcept>
 
-ship* getPlayerShip(void) {
+Ship* GetPlayerShip(void) {
 	return playerShip;
 };
 
@@ -11,7 +11,7 @@ ship* getEnemyShip(void) {
 	return ships+1;
 };
 
-ShipWrapper::ShipWrapper(ship* representedShip = NULL) {
+ShipWrapper::ShipWrapper(Ship* representedShip = NULL) {
 	this->setShipPointer(representedShip);
 }
 
@@ -64,7 +64,7 @@ std::string ShipWrapper::getDisplayName(void) {
 	throw std::runtime_error("Ship not created");
 }
 
-void ShipWrapper::setShipPointer(ship* representedShip) {
+void ShipWrapper::setShipPointer(Ship* representedShip) {
 	pShip = representedShip;
 
 	// invalidate the old objects
@@ -130,11 +130,11 @@ std::shared_ptr<UtilityManagerWrapper> ShipWrapper::getShieldManager(void) {
 	return shieldMan;
 }
 
-ship* ShipWrapper::getShipPointer(void) {
+Ship* ShipWrapper::getShipPointer(void) {
 	return pShip;
 }
 
-UtilityManagerWrapper::UtilityManagerWrapper(utilityManager* representedUtil) {
+UtilityManagerWrapper::UtilityManagerWrapper(UtilityManager* representedUtil) {
 	pUtil = representedUtil;
 }
 
@@ -162,10 +162,10 @@ void UtilityManagerWrapper::setPowerLevel(int power) {
 	pUtil->powerLevel = power;
 }
 
-void UtilityManagerWrapper::setUtilityManagerPointer(utilityManager* representedUtil) {
+void UtilityManagerWrapper::setUtilityManagerPointer(UtilityManager* representedUtil) {
 	pUtil = representedUtil;
 }
 
-utilityManager* UtilityManagerWrapper::getUtilityManagerPointer(void) {
+UtilityManager* UtilityManagerWrapper::getUtilityManagerPointer(void) {
 	return pUtil;
 }

@@ -5,7 +5,7 @@
 #include <SDL.h>
 //#include <SDL_events.h>
 
-ShipWrapper *playerWrapper = new ShipWrapper();
+ShipWrapper *playerShipWrapper = new ShipWrapper();
 
 std::vector<std::function<void(void)>> mouseDownHooks;
 std::vector<std::function<void(void)>> mouseUpHooks;
@@ -109,7 +109,7 @@ void setupChai(chaiscript::ChaiScript *chai) {
 	SDL_SetEventFilter((SDL_EventFilter)eventFilter);
 	// Key repeat (useful for text input, etc)
 	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
-	chai->add_global(chaiscript::var(playerWrapper), "playerShip");
+	chai->add_global(chaiscript::var(playerShipWrapper), "playerShip");
 	chai->add(chaiscript::fun(drawString2), "drawString");
 	chai->add(chaiscript::fun(drawRect), "drawRect");
 	chai->add(chaiscript::fun(messageBoxBlock), "messageBox_block");
