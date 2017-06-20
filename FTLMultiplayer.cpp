@@ -32,11 +32,24 @@ void UpdatePlayerShip(void) {
 	playerShipWrapper->setShipPointer(playerShip);
 }
 
+void UpdateNPCShip(void) {
+	npcShipWrapper->setShipPointer(npcShip);
+}
+
 // returns a HookAddr containing the hook code defined in the function
 __declspec(naked) void PlayerShipCreateHook(void) {
 	__asm {
 		//hook asm
 		mov[playerShip], eax;
+		ret;
+	}
+}
+
+// returns a HookAddr containing the hook code defined in the function
+__declspec(naked) void NPCShipCreateHook(void) {
+	__asm {
+		//hook asm
+		mov[npcShip], eax;
 		ret;
 	}
 }
@@ -121,9 +134,13 @@ DWORD WINAPI FTLM_Main (LPVOID lpParam)
 	//add ship creation hook
 	// could hook directly after player ship constructor at 0x400000 + 0x1DCB85, but ship is NOT fully created at that point...
 	DWORD playerShipCreationAddr = 0x400000 + 0x6314C; // 6 bytes
+	DWORD npcShipCreationAddr = 0x400000 + 0xB876F; // 7 bytes
 	//function hook first, this means it gets called after the naked hook
 	RET6AutoHookFunction(UpdatePlayerShip, playerShipCreationAddr, 6, FTLProcess);
 	RET6CALL5AutoHookNaked(PlayerShipCreateHook, playerShipCreationAddr, 6, FTLProcess);
+	// Hook enemy ship create
+	RET6AutoHookFunction(UpdateNPCShip, npcShipCreationAddr, 7, FTLProcess);
+	RET6CALL5AutoHookNaked(NPCShipCreateHook, npcShipCreationAddr, 6, FTLProcess);
 	//set up chai
 	setupChai(&chai);
 	//execute test script

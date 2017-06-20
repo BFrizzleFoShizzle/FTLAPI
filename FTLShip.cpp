@@ -6,9 +6,8 @@ Ship* GetPlayerShip(void) {
 	return playerShip;
 };
 
-ship* getEnemyShip(void) {
-	//2nd element of ships is current enemy ship
-	return ships+1;
+Ship* GetNPCShip(void) {
+	return npcShip;
 };
 
 ShipWrapper::ShipWrapper(Ship* representedShip = NULL) {

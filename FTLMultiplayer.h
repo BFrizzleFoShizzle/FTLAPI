@@ -4,3 +4,4 @@
 #include <Windows.h>
 
 Ship* playerShip = NULL;
+Ship* npcShip = NULL;

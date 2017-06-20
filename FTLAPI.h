@@ -7,6 +7,7 @@
 extern HANDLE FTLProcess;
 
 extern ShipWrapper *playerShipWrapper;
+extern ShipWrapper *npcShipWrapper;
 
 extern HINSTANCE hInstance;
 

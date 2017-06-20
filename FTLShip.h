@@ -67,10 +67,11 @@ struct Ship {
 };
 
 extern Ship* playerShip;
+extern Ship* npcShip;
 
 Ship* GetPlayerShip(void);
 
-ship* getEnemyShip(void);
+Ship* GetNPCShip(void);
 
 class UtilityManagerWrapper {
 public:
