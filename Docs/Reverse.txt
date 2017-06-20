@@ -21,6 +21,13 @@ grid width: 35
 
 Ship base value: 0x00791108 (value of the base address of a ship)
 
+"Ship" in hangar constructed at +1DCB79
+(same ship used for player ship)
+Some values initialized at +1DCBAD
+
+Opponent ship created at +B8766?
+player ship enemy set at +123CBF
+
 Your ship
 FTLGame.exe+39BA90
 Ship array
@@ -37,11 +44,15 @@ Ship reverse
 +C4 Pointer to unit pointer array
 +C8 Pointer to value of last element in unit pointer array
 +12C = hp
++130 = max hp
 (bunch of strings 1c, 1d4, 4b8-4d4)3
 +160 = ship image?
 +188 = cloak image?
+
++404 = target (enemy?)
 +4BC = name
 +4C0 = display name
++450 = scrap
 
 
 POWER MANAGER reverse
