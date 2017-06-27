@@ -87,6 +87,7 @@
     <ClCompile Include="FTLAPI.cpp" />
     <ClCompile Include="FTLDraw.cpp" />
     <ClCompile Include="FTLMultiplayer.cpp" />
+    <ClCompile Include="FTLProjectile.cpp" />
     <ClCompile Include="FTLShip.cpp" />
     <ClCompile Include="FTLShipSelector.cpp" />
     <ClCompile Include="ShipDescriptor.cpp" />
@@ -97,6 +98,7 @@
     <ClInclude Include="FTLAPI.h" />
     <ClInclude Include="FTLDraw.h" />
     <ClInclude Include="FTLMultiplayer.h" />
+    <ClInclude Include="FTLProjectile.h" />
     <ClInclude Include="FTLShip.h" />
     <ClInclude Include="FTLShipSelector.h" />
     <ClInclude Include="FTLWeapon.h" />

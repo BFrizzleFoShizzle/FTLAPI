@@ -93,6 +93,15 @@ WEAPON TARGET reverse:
 +10 shot 3 x (float)
 +14 shot 3 y (float)
 
+Projectiles:
+FTLGame.exe+39BA94
++1F34
++0 (vector of pointer to projectile, only contains active projectiles)
++0 (pointer to created projectile, +4 +8, +C all contain previous pointer to projectile (all the same))
++0
+(something about +3B3CC?)
+(vector extended at +59D89 (ship fire?), +59D89 (drone fire?), vector decreased at +3316A3
+
 
 STATIC ADDRESS:
 FTLGame.exe+39BA90 = 0079F780

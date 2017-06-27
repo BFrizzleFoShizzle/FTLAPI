@@ -2,6 +2,7 @@
 #include "TextHelper.h"
 #include "FTLShipSelector.h"
 #include "FTLDraw.h"
+#include "FTLProjectile.h"
 #include "FTLAPI.h"
 #include "DirtyHooker.h"
 #include <cstdlib>
@@ -141,6 +142,9 @@ DWORD WINAPI FTLM_Main (LPVOID lpParam)
 	// Hook enemy ship create
 	RET6AutoHookFunction(UpdateNPCShip, npcShipCreationAddr, 7, FTLProcess);
 	RET6CALL5AutoHookNaked(NPCShipCreateHook, npcShipCreationAddr, 6, FTLProcess);
+
+	SetupProjectileHooks(FTLProcess);
+
 	//set up chai
 	setupChai(&chai);
 	//execute test script
