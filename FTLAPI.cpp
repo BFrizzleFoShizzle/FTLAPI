@@ -1,6 +1,7 @@
 #include "FTLAPI.h"
 #include "FTLDraw.h"
 #include "TextHelper.h"
+#include "FTLProjectile.h"
 #include "FTLShipSelector.h"
 #include <SDL.h>
 //#include <SDL_events.h>
@@ -110,8 +111,7 @@ void setupChai(chaiscript::ChaiScript *chai) {
 	SDL_SetEventFilter((SDL_EventFilter)eventFilter);
 	// Key repeat (useful for text input, etc)
 	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
-	chai->add_global(chaiscript::var(playerShipWrapper), "playerShip");
-	chai->add_global(chaiscript::var(npcShipWrapper), "npcShip");
+	// Drawing/debug
 	chai->add(chaiscript::fun(drawString2), "drawString");
 	chai->add(chaiscript::fun(drawRect), "drawRect");
 	chai->add(chaiscript::fun(messageBoxBlock), "messageBox_block");
@@ -119,6 +119,11 @@ void setupChai(chaiscript::ChaiScript *chai) {
 	chai->add(chaiscript::fun(messageBox), "messageBox");
 	chai->add(chaiscript::fun(messageBox), "msg");
 	chai->add(chaiscript::fun(setColor), "setColor");
+	chai->add(chaiscript::fun(addDrawHook), "addDrawHook");
+	// ShipWrapper
+	chai->add_global(chaiscript::var(playerShipWrapper), "playerShip");
+	chai->add_global(chaiscript::var(npcShipWrapper), "npcShip");
+
 	chai->add(chaiscript::fun(&ShipWrapper::getHealth), "getHealth");
 	chai->add(chaiscript::fun(&ShipWrapper::getCloakImageName), "getCloakImageName");
 	chai->add(chaiscript::fun(&ShipWrapper::getShipImageName), "getShipImageName");
@@ -132,16 +137,41 @@ void setupChai(chaiscript::ChaiScript *chai) {
 	chai->add(chaiscript::fun(&ShipWrapper::getOxygenManager), "getOxygenManager");
 	chai->add(chaiscript::fun(&ShipWrapper::getShieldManager), "getShieldManager");
 	chai->add(chaiscript::fun(&ShipWrapper::getWeaponManager), "getWeaponManager");
+	// UtilityManager
 	chai->add(chaiscript::fun(&UtilityManagerWrapper::getOperated), "getOperated");
 	chai->add(chaiscript::fun(&UtilityManagerWrapper::getPowerLevel), "getPowerLevel");
 	chai->add(chaiscript::fun(&UtilityManagerWrapper::setOperated), "setOperated");
 	chai->add(chaiscript::fun(&UtilityManagerWrapper::setPowerLevel), "setPowerLevel");
-	chai->add(chaiscript::fun(addDrawHook), "addDrawHook");
+	// Projectile
+	chai->add(chaiscript::fun(&ProjectileWrapper::getAngle), "getAngle");
+	chai->add(chaiscript::fun(&ProjectileWrapper::setAngle), "setAngle");
+	chai->add(chaiscript::fun(&ProjectileWrapper::getBreachChance), "getBreachChance");
+	chai->add(chaiscript::fun(&ProjectileWrapper::setBreachChance), "setBreachChance");
+	chai->add(chaiscript::fun(&ProjectileWrapper::getFireChance), "getFireChance");
+	chai->add(chaiscript::fun(&ProjectileWrapper::setFireChance), "setFireChance");
+	chai->add(chaiscript::fun(&ProjectileWrapper::getStunChance), "getStunChance");
+	chai->add(chaiscript::fun(&ProjectileWrapper::setStunChance), "setStunChance");
+	chai->add(chaiscript::fun(&ProjectileWrapper::getDamage), "getDamage");
+	chai->add(chaiscript::fun(&ProjectileWrapper::setDamage), "setDamage");
+	chai->add(chaiscript::fun(&ProjectileWrapper::getCrewDamage), "getCrewDamage");
+	chai->add(chaiscript::fun(&ProjectileWrapper::setCrewDamage), "setCrewDamage");
+	chai->add(chaiscript::fun(&ProjectileWrapper::getIonDamage), "getIonDamage");
+	chai->add(chaiscript::fun(&ProjectileWrapper::setIonDamage), "setIonDamage");
+	chai->add(chaiscript::fun(&ProjectileWrapper::getShieldPenetration), "getShieldPenetration");
+	chai->add(chaiscript::fun(&ProjectileWrapper::setShieldPenetration), "setShieldPenetration");
+	chai->add(chaiscript::fun(&ProjectileWrapper::getX), "getX");
+	chai->add(chaiscript::fun(&ProjectileWrapper::setX), "setX");
+	chai->add(chaiscript::fun(&ProjectileWrapper::getY), "getY");
+	chai->add(chaiscript::fun(&ProjectileWrapper::setY), "setY");
+	chai->add(chaiscript::fun(&ProjectileWrapper::isActive), "isActive");
+	chai->add(chaiscript::fun(&GetActiveProjectiles), "getActiveProjectiles");
+	// Input
 	chai->add(chaiscript::fun(addMouseDownHook), "addMouseDownHook");
 	chai->add(chaiscript::fun(addMouseUpHook), "addMouseUpHook");
 	chai->add(chaiscript::fun(addKeyDownHook), "addKeyDownHook");
 	chai->add(chaiscript::fun(addKeyUpHook), "addKeyUpHook");
 	chai->add(chaiscript::fun(getCursorPos), "getCursorPos");
+	// misc
 	chai->add(chaiscript::fun(&Point::x), "x");
 	chai->add(chaiscript::fun(&Point::y), "y");
 	chai->add(chaiscript::fun(&SDL_GetTicks), "getTicks");

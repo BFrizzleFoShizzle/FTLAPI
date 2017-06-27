@@ -1,9 +1,8 @@
 #pragma once
 
 #include <vector>
+#include <chaiscript\chaiscript.hpp>
 #include <Windows.h>
-
-void SetupProjectileHooks(HANDLE process);
 
 struct Projectile {
 	// lazer = 0x0078FE48, beam = 0x0078FBC8, missile = 0x00793B88
@@ -31,10 +30,46 @@ struct Projectile {
 	int stunChance;// + 48
 	int ionDamage;// + 4C
 	char unknown9[4];// + 50
-	int personDamage;// + 54
+	int crewDamage;// + 54
 	char unknown10[40];// + 58
 	// incorrect?
 	//void* target;// + 98
 
 };
 
+class ProjectileWrapper {
+public:
+	ProjectileWrapper(Projectile* representedProj);
+	ProjectileWrapper(void);
+	float getX(void);
+	float getY(void);
+	void setX(float x);
+	void setY(float y);
+	float getAngle(void);
+	void setAngle(float angle);
+	int getDamage(void);
+	void setDamage(int damage);
+	int getShieldPenetration(void);
+	void setShieldPenetration(int penetration);
+	int getFireChance(void);
+	void setFireChance(int chance);
+	int getBreachChance(void);
+	void setBreachChance(int chance);
+	int getStunChance(void);
+	void setStunChance(int chance);
+	int getIonDamage(void);
+	void setIonDamage(int damage);
+	int getCrewDamage(void);
+	void setCrewDamage(int damage);
+	bool isActive(void);
+
+	void setProjectilePointer(Projectile* representedShip);
+	Projectile* getProjectilePointer(void);
+private:
+	Projectile* pProj;
+};
+
+
+void SetupProjectileHooks(HANDLE process);
+
+std::vector<chaiscript::Boxed_Value> GetActiveProjectiles();
