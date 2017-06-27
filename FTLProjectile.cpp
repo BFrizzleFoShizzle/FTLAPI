@@ -4,28 +4,6 @@
 
 std::vector<Projectile*> *activeProjectiles;
 
-/* 
-// outdated
-__declspec(naked) void ProjectileCreateHook(void) 
-{
-	__asm 
-	{
-		push[esp + 0xE4];
-		// do the call
-		call ProcessProjectiles;
-	}
-}
-*/
-/*
-
-1 proj (missile) post draw
-FTLGame.exe+39BA94
-+1F34
-+0 (+4 is 4 higher, +8 is 20 higher)
-+0 (pointer to created projectile, +4 +8, +C all contain previous pointer to projectile (all the same))
-+0
-*/
-
 void __stdcall CreateDroneProjectileHook2(Projectile* proj)
 {
 	// todo
@@ -59,8 +37,6 @@ __declspec(naked) void CreateShipProjectileHook(void)
 }
 
 void SetupProjectileHooks(HANDLE process) {
-	// DOESN'T INCLUDE ASTROIDS or DRONE PROJECTILES
-	//RET6CALL5AutoHookNaked(ProjectileCreateHook, 0x400000+0x3B3CC, 6, process);
 
 	RET6CALL5AutoHookNaked(CreateShipProjectileHook, 0x400000 + 0x59F83, 6, process);
 	RET6CALL5AutoHookNaked(CreateDroneProjectileHook, 0x400000 + 0x59D83, 6, process);
